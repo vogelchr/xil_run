@@ -19,7 +19,7 @@ Installation:
 	$ sudo install -m755 xil_run /usr/local/bin
 	$ sudo ln -sf xil_run /usr/local/bin/planAhead
 
-	...perform the last step for very utility you want to
+	...perform the last step for each utility you want to
 	   call via this wrapper.
 
 Resulting files in /usr/local/bin:
@@ -29,7 +29,7 @@ lrwxrwxrwx 1 root  root         7 Dec 14 13:11 planAhead -> xil_run
 
 Run, for example, planAhead (via the symlink):
 
-	➜  xil_run  planAhead
+	$ planAhead
 	Using XILINX ISE in /opt/Xilinx/14.7.
 	Symlink mode, running planAhead.
 	. /opt/Xilinx/14.7/ISE_DS/common/.settings64.sh...
@@ -40,7 +40,7 @@ Run, for example, planAhead (via the symlink):
 
 Or ise, via the xil_run utility:
 
-	➜  xil_run  xil_run ise
+	$  xil_run ise
 	Using XILINX ISE in /opt/Xilinx/14.7.
 	Direct mode, running ise.
 	. /opt/Xilinx/14.7/ISE_DS/common/.settings64.sh...
