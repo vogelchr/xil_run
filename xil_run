@@ -1,0 +1,99 @@
+#!/bin/bash
+
+green="\033[32m"
+red="\033[31m"
+bold="\033[1m"
+norm="\033[0m"
+set -e
+
+###
+# safeguard against calling ourselves...
+###
+if [ -n "$RUN_XILINX_CALLED_RECURSIVELY" ] ; then
+	echo -e "${red}${bold}run_xilinx.sh called recursively!${norm}" >&2
+	exit 1
+fi
+RUN_XILINX_CALLED_RECURSIVELY=1
+export RUN_XILINX_CALLED_RECURSIVELY
+
+
+###
+# User may specify XILINX to be the root directory of the ISE toolchain.
+# (e.g. XILINX=/opt/XIlinx/14.4), otherwise we try to find the last
+# subdirectory (hopefully with the latest version) that contains a
+# ISE_DS/settings64.sh script.
+###
+if [ -z "$XILINX" ] ; then
+	if ! [ -d "/opt/Xilinx" ] ; then
+		echo -e "${red}${bold}XILINX variable not set, and /opt/Xilinx does not exist.${norm}" >&2
+		exit 1
+	fi
+
+	for d in /opt/Xilinx/* ; do
+		if [ -f "$d/ISE_DS/settings64.sh" ] ; then
+			XILINX="$d"
+		fi
+	done
+
+	if [ -z "$XILINX" ] ; then
+		echo -e "${red}${bold}Did not find a suitable directory in /opt/Xilinx${norm}" >&2
+		exit 1
+	fi
+
+	echo -e "${green}Using XILINX ISE in $XILINX.${norm}" >&2
+fi
+
+###
+# If we are called run_xilinx, then expect the program to run as the first
+# argument. Otherwise, we probably are a symbolix link and we want to
+# use $0 as the program to run.
+###
+my_basename="${0##*/}"
+if [ "$my_basename" == "xil_run" ] ; then
+	if [ "$#" -lt 1 ] ; then
+		echo -e "${red}${bold}Speficy program to run as argument!${norm}" >&2
+		exit 1
+	fi
+	exec_basename="${1##*/}"
+	echo -e "${green}${bold}Direct mode, running $exec_basename.${norm}" >&2
+else
+	exec_basename="${0##*/}"
+	echo -e "${green}${bold}Symlink mode, running $exec_basename.${norm}" >&2
+fi
+
+###
+# The XILINX settings64 script does NOT like us having any argument set
+# ($1,...), so we save the arguments we've been called with in the
+# bash-specific "Array-Variable" saved_argv and clear $1, $2, ...
+###
+declare -a saved_argv
+saved_argv=( "$@" )
+set --
+
+###
+# Run the XILINX settings script, but...
+# the XILINX settings-scripts creates output on stdout which confuses tools
+# piping into/out of the commands, so we redirect the output to STDERR
+###
+exec 5>&1 >&2   # duplicate STDOUT as FD#5, redirect STDOUT to STDERR
+. $XILINX/ISE_DS/settings64.sh
+exec >&5-       # move FD#5 back to STDOUT
+
+if ! which "$exec_basename" >/dev/null 2>/dev/null ; then
+	echo -e "${red}${bold}$exec_basename not found in PATH.${norm}" >&2
+	echo "$PATH" >&2
+	exit 1
+fi
+
+set +e
+"$exec_basename" "${saved_argv[@]}"
+returncode="$?"
+set -e
+
+if [ "$returncode" = "0" ] ; then
+	echo -e "${green}${bold}$exec_basename returned OK.${norm}" >&2
+else
+	echo -e "${red}${bold}$exec_basename returned $returncode.${norm}" >&2
+fi
+
+exit "$returncode"

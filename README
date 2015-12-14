@@ -1,0 +1,51 @@
+xil_run -- Run XILINX ISE utilities within their strange environment.
+
+Written December 2015 by Christian Vogel <vogelchr@vogel.cx>, placed
+in the public domain, I don't claim any rights to this short piece of
+scripting code.
+
+The XILINX development environment needs a shitload of environment
+variables to set up. This is done by their "settings64.sh" shell-script.
+As I don't want to pollute my stanadard environment with all this junk,
+I've written this wrapper that can be used to effortlessly run the Xilinx
+utilities.  Unfortunately, the "settings64.sh" script is a little peculiar
+in the way it likes to be called, hence this wrapper is a little convoluted :-).
+
+The utility assumes the Xilinx toolchain to be installed as a subdirectory
+of /opt/Xilinx, for example /opt/Xilinx/14.7.
+
+Installation:
+
+	$ sudo install -m755 xil_run /usr/local/bin
+	$ sudo ln -sf xil_run /usr/local/bin/planAhead
+
+	...perform the last step for very utility you want to
+	   call via this wrapper.
+
+Resulting files in /usr/local/bin:
+
+lrwxrwxrwx 1 root  root         7 Dec 14 13:11 planAhead -> xil_run
+-rwxr-xr-x 1 root  root      2637 Dec 14 13:07 xil_run
+
+Run, for example, planAhead (via the symlink):
+
+	➜  xil_run  planAhead
+	Using XILINX ISE in /opt/Xilinx/14.7.
+	Symlink mode, running planAhead.
+	. /opt/Xilinx/14.7/ISE_DS/common/.settings64.sh...
+	. /opt/Xilinx/14.7/ISE_DS/EDK/.settings64.sh...
+	. /opt/Xilinx/14.7/ISE_DS/PlanAhead/.settings64.sh...
+	. /opt/Xilinx/14.7/ISE_DS/ISE/.settings64.sh...
+	%  <--- PlanAhead Prompt
+
+Or ise, via the xil_run utility:
+
+	➜  xil_run  xil_run ise
+	Using XILINX ISE in /opt/Xilinx/14.7.
+	Direct mode, running ise.
+	. /opt/Xilinx/14.7/ISE_DS/common/.settings64.sh...
+	. /opt/Xilinx/14.7/ISE_DS/EDK/.settings64.sh...
+	. /opt/Xilinx/14.7/ISE_DS/PlanAhead/.settings64.sh...
+	. /opt/Xilinx/14.7/ISE_DS/ISE/.settings64.sh...
+	. /opt/Xilinx/14.7/ISE_DS/common/.settings64.sh /opt/Xilinx/14.7/ISE_DS/common
+	( ise now open )
