@@ -86,6 +86,29 @@ if ! which "$exec_basename" >/dev/null 2>/dev/null ; then
 	exit 1
 fi
 
+#
+# Support Parallel Cable III / USB Cables under Linux.
+# http://www.rmdir.de/~michael/xilinx/
+#
+
+# We only do this for "impact", because loading the library also in
+# ise (or other tools) hangs my system.
+
+LUD="$XILINX_DSP/lib/lin64/libusb-driver.so"
+if [ -x "$LUD" ] ; then
+	case "$exec_basename" in
+		impact|impact4)
+			echo -e "${green}Preloading ${red}$LUD${green} for impact!${norm}" >&2
+			if [ "x$LD_PRELOAD" = "x" ] ; then
+				LD_PRELOAD="$LUD"
+			else
+				LD_PRELOAD="$LUD:$LD_PRELOAD"
+			fi
+			export LD_PRELOAD
+		;;
+	esac
+fi
+
 set +e
 "$exec_basename" "${saved_argv[@]}"
 returncode="$?"
